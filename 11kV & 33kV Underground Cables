@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Report: 11kV & 33kV Cables - TAQA Distribution</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Visualization & Content Choices:
+        - Overview: Text summaries. Goal: Inform. Method: HTML paragraphs. Intro to TAQA and network.
+        - Cable Specifications: Interactive HTML presentation of Report Table 1 data (expandable items for parameter categories). Bar chart comparing 11kV vs 33kV (Insulation Thickness, Short Circuit Withstand). Goal: Inform, Compare. Method: HTML, Chart.js. Interaction: Click to expand details, hover on chart. Justification: Detailed specs accessible, visual comparison of key voltage differences.
+        - Cable Faults: Interactive HTML presentation of Report Table 2 data (expandable items for fault categories/types). Donut chart for general fault type distribution (L-G, L-L etc.). Goal: Inform, Show Proportions. Method: HTML, Chart.js. Interaction: Click to expand details, hover on chart. Justification: Easy access to fault details, visual of common fault types.
+        - Equipment & Tools: Interactive HTML presentation of Report Table 3 data (expandable items for equipment types), categorized. Goal: Inform, Organize. Method: HTML. Interaction: Click to expand details. Justification: Structured access to equipment info.
+        - Standards & Compliance: List of key standards with expandable details for scope. Goal: Inform. Method: HTML.
+        - Approved Manufacturers: List of manufacturers. Goal: Inform. Method: HTML.
+        - Recommendations & Future: Summarized bullet points. Goal: Inform. Method: HTML.
+        CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. All charts via Chart.js (Canvas). Icons via Unicode. -->
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .chart-container { position: relative; width: 100%; max-width: 600px; margin-left: auto; margin-right: auto; height: 300px; max-height: 350px; }
+        @media (min-width: 768px) { .chart-container { height: 350px; max-height:400px } }
+        .tab-button { transition: all 0.3s ease; }
+        .tab-button.active { border-color: #06b6d4; color: #06b6d4; background-color: #ecfeff; }
+        .tab-button:hover { border-color: #0891b2; color: #0891b2; }
+        .content-section { display: none; }
+        .content-section.active { display: block; }
+        .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+        .accordion-item.active .accordion-content { max-height: 2000px; /* Adjust as needed */ }
+        .table-like { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; }
+        .table-like-item { background-color: #f8fafc; padding: 1rem; border-radius: 0.5rem; border: 1px solid #e2e8f0; }
+        .table-like-header { font-weight: 600; color: #1e3a8a; margin-bottom: 0.5rem; }
+    </style>
+</head>
+<body class="bg-stone-100 text-gray-800">
+    <div class="container mx-auto p-4 md:p-8">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-sky-700">11kV & 33kV Underground Cables</h1>
+            <p class="text-xl text-sky-600">Interactive Report for TAQA Distribution Networks</p>
+        </header>
+
+        <nav class="mb-8 flex flex-wrap justify-center gap-2">
+            <button class="tab-button active text-sm md:text-base px-4 py-2 border-b-2 border-transparent rounded-t-lg" data-tab="overview">🌍 Overview</button>
+            <button class="tab-button text-sm md:text-base px-4 py-2 border-b-2 border-transparent rounded-t-lg" data-tab="specifications">🛠️ Cable Specs</button>
+            <button class="tab-button text-sm md:text-base px-4 py-2 border-b-2 border-transparent rounded-t-lg" data-tab="faults">⚡ Cable Faults</button>
+            <button class="tab-button text-sm md:text-base px-4 py-2 border-b-2 border-transparent rounded-t-lg" data-tab="equipment">⚙️ Equipment</button>
+            <button class="tab-button text-sm md:text-base px-4 py-2 border-b-2 border-transparent rounded-t-lg" data-tab="standards">📜 Standards</button>
+            <button class="tab-button text-sm md:text-base px-4 py-2 border-b-2 border-transparent rounded-t-lg" data-tab="manufacturers">🏭 Manufacturers</button>
+            <button class="tab-button text-sm md:text-base px-4 py-2 border-b-2 border-transparent rounded-t-lg" data-tab="recommendations">💡 Recommendations</button>
+        </nav>
+
+        <main>
+            <section id="overview" class="content-section active bg-white p-6 rounded-lg shadow-lg">
+                <h2 class="text-2xl font-semibold text-sky-700 mb-4">Overview of TAQA Distribution and Network</h2>
+                <p class="mb-4 text-gray-700">This section provides an introduction to TAQA Distribution, formed from the merger of ADDC and AADC, and its role in Abu Dhabi's power distribution. It highlights the importance of the 11kV and 33kV cable networks for reliable electricity supply across residential, commercial, and industrial sectors. You'll find information on network characteristics and TAQA's strategic objectives, including its commitment to a smart, sustainable, and digitally integrated network.</p>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <h3 class="text-xl font-semibold text-sky-600 mb-2">TAQA Distribution Context</h3>
+                        <p class="text-gray-600 mb-2">Abu Dhabi National Energy Company (TAQA) is an integrated utility group. The distribution arm, TAQA Distribution, unified ADDC and AADC from January 2025, serving over 1,080,000 service points.</p>
+                        <p class="text-gray-600 mb-2">The merger aims for operational synergies, harmonized standards, and enhanced customer service across Abu Dhabi.</p>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-semibold text-sky-600 mb-2">Network Characteristics (11kV & 33kV)</h3>
+                        <p class="text-gray-600 mb-2">The distribution system operates at 33kV and lower. Standardized connection arrangements (ER-11) exist for 11kV (Category B) and 33kV (Category D) connections.</p>
+                        <p class="text-gray-600 mb-2">Security of Supply Standard (ER-04) dictates performance, like restoration times (e.g., 11kV ring feeder: 50% demand in 20 mins, full in 2 hours with remote/auto switching).</p>
+                        <p class="text-gray-600 mb-2">Future network development will support UAE's Net Zero by 2050, integrating renewables and evolving into an intelligent grid.</p>
+                    </div>
+                </div>
+                 <div class="mt-6">
+                    <h3 class="text-xl font-semibold text-sky-600 mb-3 text-center">Key Network Figures</h3>
+                    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 text-center">
+                        <div class="bg-sky-50 p-4 rounded-lg shadow">
+                            <p class="text-3xl font-bold text-sky-700">>1.08M</p>
+                            <p class="text-gray-600">Service Points</p>
+                        </div>
+                        <div class="bg-emerald-50 p-4 rounded-lg shadow">
+                            <p class="text-3xl font-bold text-emerald-700">11kV & 33kV</p>
+                            <p class="text-gray-600">Primary MV Levels</p>
+                        </div>
+                        <div class="bg-amber-50 p-4 rounded-lg shadow">
+                            <p class="text-xl font-semibold text-amber-700">XLPE Cables</p>
+                            <p class="text-gray-600">Predominant Type</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="specifications" class="content-section bg-white p-6 rounded-lg shadow-lg">
+                <h2 class="text-2xl font-semibold text-sky-700 mb-4">11kV & 33kV Cable Specifications</h2>
+                <p class="mb-4 text-gray-700">This section details the technical specifications of 11kV and 33kV underground cables, primarily focusing on the Cross-Linked Polyethylene (XLPE) insulated types used by TAQA Distribution. You can explore various construction parameters and key electrical characteristics. An interactive table based on TAQA/ADDC/AADC Standard S-CAB-UMV-3CAL_00.DOCX allows you to delve into specific requirements. A chart also compares key differences between 11kV and 33kV cables.</p>
+                
+                <h3 class="text-xl font-semibold text-sky-600 mb-3">Predominant Cable Types</h3>
+                <div class="accordion-item mb-2 border border-gray-200 rounded">
+                    <button class="accordion-header w-full text-left p-3 bg-sky-50 hover:bg-sky-100 rounded-t font-medium">Cross-Linked Polyethylene (XLPE) Insulated Cables <span class="float-right">▼</span></button>
+                    <div class="accordion-content p-3 border-t border-gray-200 text-gray-600">
+                        <p>XLPE is the standard for 11kV and 33kV cables due to superior dielectric properties, thermal performance (90°C continuous, 250°C short-circuit), mechanical strength, and resistance to moisture/chemicals. TAQA specifies three-core Aluminium conductor XLPE cables.</p>
+                    </div>
+                </div>
+                <div class="accordion-item mb-4 border border-gray-200 rounded">
+                    <button class="accordion-header w-full text-left p-3 bg-amber-50 hover:bg-amber-100 rounded-t font-medium">Paper Insulated Lead Covered (PILC) Cables <span class="float-right">▼</span></button>
+                    <div class="accordion-content p-3 border-t border-gray-200 text-gray-600">
+                        <p>Legacy technology, may exist in older network sections. Transition joints between PILC and XLPE cables are points of vulnerability due to material incompatibilities and thermo-mechanical differences, requiring careful management.</p>
+                    </div>
+                </div>
+
+                <h3 class="text-xl font-semibold text-sky-600 mb-3">Key XLPE Cable Specifications (TAQA/ADDC/AADC)</h3>
+                <p class="mb-4 text-sm text-gray-500">Click on each category to expand and see detailed requirements based on S-CAB-UMV-3CAL_00.DOCX.</p>
+                <div id="cableSpecTable" class="space-y-2"></div>
+
+                <h3 class="text-xl font-semibold text-sky-600 my-6 text-center">11kV vs 33kV XLPE Cable: Key Parameter Comparison</h3>
+                <div class="chart-container bg-gray-50 p-4 rounded-lg shadow-inner">
+                    <canvas id="kvComparisonChart"></canvas>
+                </div>
+            </section>
+
+            <section id="faults" class="content-section bg-white p-6 rounded-lg shadow-lg">
+                <h2 class="text-2xl font-semibold text-sky-700 mb-4">Common Cable Faults</h2>
+                <p class="mb-4 text-gray-700">Explore common faults affecting 11kV and 33kV underground distribution cables. This section covers fault classifications (electrical, insulation, mechanical, environmental, accessory failures), analyzes specific fault types, and discusses contributing factors. An interactive display, based on Table 2 of the source report, helps you understand causes and consequences. A chart illustrates the typical distribution of fault types.</p>
+                
+                <h3 class="text-xl font-semibold text-sky-600 mb-3">Fault Classification Highlights</h3>
+                <ul class="list-disc list-inside text-gray-600 mb-4 space-y-1">
+                    <li><strong>Electrical Faults:</strong> Short circuits (L-G, L-L, L-L-L) and open circuits. Single Line-to-Ground (L-G) are most common (60-80%).</li>
+                    <li><strong>Insulation Degradation:</strong> Partial Discharge (PD), Electrical Treeing (TAQA specifies "tree-retardant" XLPE), Water Treeing, Thermal Degradation.</li>
+                    <li><strong>Mechanical Damage:</strong> Often by third-party excavation; also installation damage or vibration.</li>
+                    <li><strong>Environmental Factors:</strong> Moisture ingress, corrosion (TAQA specifies sulphide-resistant outer sheath).</li>
+                    <li><strong>Accessory Failures:</strong> Joints and terminations are critical points; PILC-XLPE transition joints are notably vulnerable.</li>
+                </ul>
+                
+                <h3 class="text-xl font-semibold text-sky-600 mb-3">Common Faults Details</h3>
+                <p class="mb-4 text-sm text-gray-500">Click on each fault category to expand and see details.</p>
+                <div id="cableFaultsTable" class="space-y-2"></div>
+
+                <h3 class="text-xl font-semibold text-sky-600 my-6 text-center">Typical MV Cable Fault Type Distribution</h3>
+                <div class="chart-container bg-gray-50 p-4 rounded-lg shadow-inner">
+                    <canvas id="faultDistributionChart"></canvas>
+                </div>
+            </section>
+
+            <section id="equipment" class="content-section bg-white p-6 rounded-lg shadow-lg">
+                <h2 class="text-2xl font-semibold text-sky-700 mb-4">Essential Equipment & Tools</h2>
+                 <p class="mb-4 text-gray-700">This section outlines the essential equipment used for the installation, jointing, termination, fault location, diagnosis, and testing of 11kV and 33kV cable systems. You can explore various technologies for cable accessories and the specialized apparatus required for maintaining network integrity. Information is drawn from Table 3 of the source report.</p>
+
+                <h3 class="text-xl font-semibold text-sky-600 mb-3">Equipment Categories</h3>
+                <p class="mb-4 text-sm text-gray-500">Click on each category to explore specific equipment and techniques.</p>
+                <div id="cableEquipmentTable" class="space-y-2"></div>
+            </section>
+
+            <section id="standards" class="content-section bg-white p-6 rounded-lg shadow-lg">
+                <h2 class="text-2xl font-semibold text-sky-700 mb-4">Applicable Standards & Compliance</h2>
+                <p class="mb-4 text-gray-700">The design, manufacture, testing, and operation of 11kV and 33kV cable systems are governed by a hierarchy of standards. This section provides an overview of key international standards (IEC, BS), regional (GCC), and local TAQA/ADDC/AADC specifications and Engineering Recommendations that ensure safety, reliability, and interoperability. TAQA's local specifications take precedence in case of any conflict.</p>
+                
+                <div class="space-y-3">
+                    <div class="accordion-item border border-gray-200 rounded">
+                        <button class="accordion-header w-full text-left p-3 bg-sky-50 hover:bg-sky-100 rounded-t font-medium">International Standards <span class="float-right">▼</span></button>
+                        <div class="accordion-content p-3 border-t border-gray-200 text-gray-600">
+                            <ul class="list-disc list-inside space-y-1">
+                                <li><strong>IEC 60502-2:</strong> Power cables with extruded insulation (6kV to 30kV). Core standard for XLPE cables.</li>
+                                <li><strong>IEC 60228:</strong> Conductors of insulated cables.</li>
+                                <li><strong>IEC 60287 series:</strong> Calculation of current rating.</li>
+                                <li><strong>BS 6622:</strong> Armoured thermosetting insulated cables (3.8/6.6kV to 19/33kV).</li>
+                                <li><strong>BS 7870 series:</strong> LV and MV distribution cables (incl. LSZH).</li>
+                                <li><strong>BS 7835:</strong> Armoured thermosetting insulated cables with low smoke/corrosive gas emission.</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="accordion-item border border-gray-200 rounded">
+                        <button class="accordion-header w-full text-left p-3 bg-sky-50 hover:bg-sky-100 rounded-t font-medium">TAQA/ADDC/AADC Specifications & Engineering Recommendations (ERs) <span class="float-right">▼</span></button>
+                        <div class="accordion-content p-3 border-t border-gray-200 text-gray-600">
+                            <ul class="list-disc list-inside space-y-1">
+                                <li><strong>S-CAB-UMV-3CAL_00.DOCX:</strong> TAQA/ADDC/AADC standard for 11, 22 & 33KV XLPE-Insulated Three-Core Underground Cables with Aluminium Conductors. This is the primary local specification.</li>
+                                <li><strong>ER-04:</strong> Security of Supply Standard. Defines reliability criteria and restoration times.</li>
+                                <li><strong>ER-08:</strong> Earthing System Design & Installation. Critical for safety and fault current management.</li>
+                                <li><strong>ER-11:</strong> Standard Connection Arrangements for User Systems. Defines interface requirements.</li>
+                            </ul>
+                        </div>
+                    </div>
+                     <div class="accordion-item border border-gray-200 rounded">
+                        <button class="accordion-header w-full text-left p-3 bg-sky-50 hover:bg-sky-100 rounded-t font-medium">Regional (GCC) Standards <span class="float-right">▼</span></button>
+                        <div class="accordion-content p-3 border-t border-gray-200 text-gray-600">
+                             <p>The GCC Standardization Organization (GSO) also develops relevant standards (e.g., GSO EN 45510-2-8:2021 for procurement of LV/MV power cables).</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="manufacturers" class="content-section bg-white p-6 rounded-lg shadow-lg">
+                <h2 class="text-2xl font-semibold text-sky-700 mb-4">Approved Manufacturers & Suppliers</h2>
+                <p class="mb-4 text-gray-700">TAQA Distribution maintains an Approved Vendor List (AVL) for critical assets like 11kV and 33kV cables to ensure quality and reliability. This section lists some prominent regional and international manufacturers that have been approved or have a history of supplying to ADDC/AADC (now TAQA Distribution). This is indicative and subject to TAQA's current AVL.</p>
+                <div class="table-like">
+                    <div class="table-like-item">EL SEWEDY CABLES (Egypt, KSA)</div>
+                    <div class="table-like-item">POWER PLUS CABLE CO LLC (UAE)</div>
+                    <div class="table-like-item">AL FANAR ELECTRICAL SYSTEMS (KSA)</div>
+                    <div class="table-like-item">BAHRA ADVANCED CABLE MANUFACTURE CO LTD (KSA)</div>
+                    <div class="table-like-item">NUHAS OMAN LLC (Oman)</div>
+                    <div class="table-like-item">QATAR INTERNATIONAL CABLES COMPANY QICC NEXANS (Qatar)</div>
+                    <div class="table-like-item">PRYSMIAN CABLES AND SYSTEMS B V (Netherlands)</div>
+                    <div class="table-like-item">KEI INDUSTRIES Ltd (India)</div>
+                    <div class="table-like-item">Dubai Cable Company (DUCAB) (UAE)</div>
+                    <div class="table-like-item">Riyadh Cables (KSA)</div>
+                    <div class="table-like-item">Oman Cables (Oman)</div>
+                    <div class="table-like-item">Saudi Cable Co. (KSA)</div>
+                    <div class="table-like-item">National Cables Industry (NCI) (Sharjah, UAE)</div>
+                </div>
+                <p class="mt-4 text-sm text-gray-500">Note: The inclusion of manufacturers here is based on information in the source report (dated 2012 for some historical ADWEA lists, and more recent TAQA vendor lists referenced in submittals). For current procurement, TAQA Distribution's official AVL should always be consulted.</p>
+            </section>
+
+            <section id="recommendations" class="content-section bg-white p-6 rounded-lg shadow-lg">
+                <h2 class="text-2xl font-semibold text-sky-700 mb-4">Recommendations & Future Outlook</h2>
+                <p class="mb-4 text-gray-700">This section summarizes key recommendations for enhancing the reliability, safety, and operational efficiency of TAQA Distribution's 11kV and 33kV cable networks. It also touches upon the future outlook for power distribution, considering smart grid integration and evolving technologies.</p>
+                
+                <h3 class="text-xl font-semibold text-sky-600 mb-2">Key Recommendations</h3>
+                <ul class="list-disc list-inside text-gray-600 mb-4 space-y-2">
+                    <li><strong>Strict Adherence to Specifications:</strong> Follow TAQA's latest standards (e.g., S-CAB-UMV-3CAL_00.DOCX) and use approved vendors. Consider LSZH cables for high fire-risk areas.</li>
+                    <li><strong>Proactive Fault Management:</strong> Implement systematic diagnostic testing (VLF, Tan Delta, PD). Develop strategies for managing legacy PILC cables and transition joints. Maintain detailed fault records.</li>
+                    <li><strong>Best Practices for Equipment & Training:</strong> Use modern, calibrated fault location equipment. Invest in comprehensive training for jointers and fault teams. Standardize on approved accessories and ensure meticulous installation.</li>
+                    <li><strong>Periodic Review of Standards:</strong> Regularly update ER-04, ER-08, etc., to align with network growth and technological advancements.</li>
+                    <li><strong>Leverage TAQA Unification:</strong> Establish a single, best-practice framework for cable system management post-merger.</li>
+                    <li><strong>Data Analytics:</strong> Invest in analytics for fault/diagnostic data to predict at-risk segments and optimize maintenance.</li>
+                    <li><strong>Manufacturer Collaboration:</strong> Foster R&D partnerships for products suited to the harsh Middle Eastern environment.</li>
+                </ul>
+
+                <h3 class="text-xl font-semibold text-sky-600 mb-2">Future Outlook</h3>
+                <ul class="list-disc list-inside text-gray-600 space-y-2">
+                    <li><strong>Smart Grid Integration:</strong> Cables with embedded sensing, enhanced communication.</li>
+                    <li><strong>Distributed Renewables:</strong> Cables managing bi-directional power flows and dynamic loads.</li>
+                    <li><strong>Material Science Advancements:</strong> Improved thermal performance, environmental resilience, smaller footprints.</li>
+                    <li><strong>Continuous Improvement:</strong> Learn from internal data, benchmark internationally, integrate new technologies.</li>
+                </ul>
+            </section>
+        </main>
+
+        <footer class="text-center mt-12 py-4 border-t border-gray-300">
+            <p class="text-sm text-gray-500">Interactive SPA generated from Technical Report. For official use, always refer to full TAQA Distribution documentation.</p>
+        </footer>
+    </div>
+
+<script>
+    const tabButtons = document.querySelectorAll('.tab-button');
+    const contentSections = document.querySelectorAll('.content-section');
+
+    tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+
+            const targetTab = button.getAttribute('data-tab');
+            contentSections.forEach(section => {
+                if (section.id === targetTab) {
+                    section.classList.add('active');
+                } else {
+                    section.classList.remove('active');
+                }
+            });
+        });
+    });
+
+    function initializeAccordions() {
+        const accordionItems = document.querySelectorAll('.accordion-item');
+        accordionItems.forEach(item => {
+            const header = item.querySelector('.accordion-header');
+            header.addEventListener('click', () => {
+                // Toggle active class on the clicked item
+                const currentlyActive = item.classList.contains('active');
+                 // Optional: Close other accordions in the same group if you want only one open at a time
+                // item.parentElement.querySelectorAll('.accordion-item').forEach(el => el.classList.remove('active'));
+                if (!currentlyActive) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+        });
+    }
+    
+    const cableSpecData = [
+        { category: "General", params: [
+            { name: "Cable Type", value: "Three-core, XLPE-Insulated, Underground Cable" },
+            { name: "Voltage Level", value: "11kV, 22kV, 33kV (S-CAB-UMV-3CAL_00.DOCX covers all)" }
+        ]},
+        { category: "Conductor", params: [
+            { name: "Material", value: "Aluminium (Al)" },
+            { name: "Construction", value: "Stranded (Class 2 to IEC 60228), Compacted, Circular" },
+            { name: "Longitudinal Water Blocking", value: "Required (water swelling tapes)" }
+        ]},
+        { category: "Conductor Screen", params: [
+            { name: "Material", value: "Extruded black semi-conducting compound, bonded to insulation" },
+            { name: "Min. Thickness", value: "0.4 mm" }
+        ]},
+        { category: "Insulation", params: [
+            { name: "Material Type", value: "\"Tree-retardant\" Cross-Linked Polyethylene (XLPE) (IEC 60502-2)" },
+            { name: "Nominal Thickness (11kV)", value: "3.4 mm (min 2.96 mm)" },
+            { name: "Nominal Thickness (33kV)", value: "8.0 mm (min 7.1 mm)" }
+        ]},
+        { category: "Insulation Screen (Non-Metallic)", params: [
+            { name: "Material", value: "Extruded black semi-conducting compound" },
+            { name: "Min. Thickness", value: "0.4 mm" },
+            { name: "Strippability", value: "Cold strippable (by hand, no tools/heat)" }
+        ]},
+        { category: "Insulation Screen (Metallic)", params: [
+            { name: "Material & Construction", value: "One layer annealed copper wires, helically applied, with counter helix copper binder tape (min. 2mm²)" }
+        ]},
+        { category: "Laying Up", params: [
+            { name: "Construction", value: "Three cores laid up with polypropylene yarn filler, wrapped with binder tapes" }
+        ]},
+        { category: "Inner Sheath (Bedding)", params: [
+            { name: "Material", value: "Extruded PE ST7 (IEC 60502-2) or ST8 compound (IEC 60502-1)" }
+        ]},
+        { category: "Armour", params: [
+            { name: "Type & Material", value: "Single layer galvanized round steel wires (SWA), helically applied" }
+        ]},
+        { category: "Outer Sheath", params: [
+            { name: "Material", value: "PE ST7 or ST8 compound" },
+            { name: "Special Properties", value: "Not susceptible to cracking/decomposition; free from chlorinated paraffins; resistant to sulphides; covered by thin semi-conductive layer; marked with owner, voltage, size, mfg, year, PO, length." }
+        ]},
+        { category: "Electrical Performance", params: [
+            { name: "Short Circuit Withstand (11kV, 0.5s)", value: "25 kA" },
+            { name: "Short Circuit Withstand (22kV & 33kV, 0.5s)", value: "31.5 kA" }
+        ]},
+        { category: "Standards", params: [
+            { name: "Primary TAQA/ADDC/AADC", value: "S-CAB-UMV-3CAL_00.DOCX" },
+            { name: "Key International Referenced", value: "IEC 60502-2, IEC 60228, IEC 60287, BS 6622" }
+        ]}
+    ];
+
+    const cableSpecTableContainer = document.getElementById('cableSpecTable');
+    cableSpecData.forEach(item => {
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'accordion-item border border-gray-200 rounded';
+        let paramsHtml = '<ul class="list-disc list-inside space-y-1 pl-4">';
+        item.params.forEach(param => {
+            paramsHtml += `<li><strong>${param.name}:</strong> ${param.value}</li>`;
+        });
+        paramsHtml += '</ul>';
+        itemDiv.innerHTML = `
+            <button class="accordion-header w-full text-left p-3 bg-stone-50 hover:bg-stone-100 rounded-t font-medium text-sky-800">${item.category} <span class="float-right">▼</span></button>
+            <div class="accordion-content p-3 border-t border-gray-200 text-gray-600">
+                ${paramsHtml}
+            </div>
+        `;
+        cableSpecTableContainer.appendChild(itemDiv);
+    });
+    
+    const cableFaultsData = [
+        { category: "Electrical Short Circuit", details: [
+            { name: "Single Line-to-Ground (L-G)", cause: "Insulation failure/breakdown; external damage; accessory failure.", consequence: "Overcurrent relay (earth fault); voltage dip; arcing; supply interruption. Most common type; influences earthing (ER-08) & protection." },
+            { name: "Line-to-Line (L-L)", cause: "Insulation failure between phases; external damage; accessory failure.", consequence: "Overcurrent relay (phase fault); significant voltage dip; arcing; supply interruption." },
+            { name: "Three-Phase (L-L-L)", cause: "Severe insulation breakdown; major external damage.", consequence: "High symmetrical fault currents; significant voltage collapse; arcing; supply interruption." }
+        ]},
+        { category: "Electrical Open Circuit", details: [
+            { name: "Conductor Break / Open Joint", cause: "Mechanical stress/fatigue; corrosion; manufacturing defect.", consequence: "Loss of supply; unbalanced voltages/currents." }
+        ]},
+        { category: "Insulation Degradation", details: [
+            { name: "Partial Discharge (PD)", cause: "Voids/contaminants in insulation; protrusions; aging; overstress.", consequence: "Gradual insulation erosion; eventual breakdown. 'Tree-retardant' XLPE specified to mitigate." },
+            { name: "Water Treeing", cause: "Moisture ingress into polymeric insulation under electrical stress.", consequence: "Reduced dielectric strength; increased breakdown probability. Longitudinal water-blocking specified." },
+            { name: "Thermal Degradation", cause: "Sustained overloads; high ambient temps; poor heat dissipation; high resistance joints.", consequence: "Accelerated insulation aging; embrittlement; premature failure. Cables designed for high ambient conditions." }
+        ]},
+        { category: "Mechanical Damage", details: [
+            { name: "Third-Party Excavation", cause: "Digging/drilling without proper cable location.", consequence: "Immediate fault or latent damage leading to future failure. Major cause; requires robust protection." },
+            { name: "Installation Damage", cause: "Exceeding min. bend radius; excessive pulling tension; sharp backfill.", consequence: "Immediate or latent damage. Adherence to standards critical." }
+        ]},
+        { category: "Environmental Factors", details: [
+            { name: "Moisture Ingress (general)", cause: "Damaged outer sheath; improperly sealed accessories.", consequence: "Corrosion; insulation degradation. Sheath integrity tests & proper sealing vital." },
+            { name: "Corrosion", cause: "Aggressive soil (sulphates, chlorides); moisture; stray currents.", consequence: "Deterioration of armour/screen. Sulphide-resistant outer sheath specified." }
+        ]},
+        { category: "Accessory Failure", details: [
+            { name: "Joint Failure", cause: "Improper installation; material defect; moisture ingress; thermo-mechanical stress; aging.", consequence: "Short/open circuit at joint; overheating; potential fire. Critical components." },
+            { name: "Termination Failure", cause: "Improper installation; contamination; moisture ingress; tracking; PD.", consequence: "Flashover; short circuit; equipment damage." },
+            { name: "Transition Joint Failure (PILC-XLPE)", cause: "Material incompatibility; stress concentration; moisture; compound degradation.", consequence: "High failure probability; power arc; potential fire. Significant concern for legacy networks." }
+        ]}
+    ];
+
+    const cableFaultsTableContainer = document.getElementById('cableFaultsTable');
+    cableFaultsData.forEach(item => {
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'accordion-item border border-gray-200 rounded';
+        let detailsHtml = '<div class="space-y-2">';
+        item.details.forEach(detail => {
+            detailsHtml += `
+                <div class="p-2 bg-gray-50 rounded">
+                    <p class="font-semibold text-gray-700">${detail.name}</p>
+                    <p class="text-sm"><strong class="text-gray-600">Causes:</strong> ${detail.cause}</p>
+                    <p class="text-sm"><strong class="text-gray-600">Consequences/Relevance:</strong> ${detail.consequence}</p>
+                </div>
+            `;
+        });
+        detailsHtml += '</div>';
+        itemDiv.innerHTML = `
+            <button class="accordion-header w-full text-left p-3 bg-stone-50 hover:bg-stone-100 rounded-t font-medium text-sky-800">${item.category} <span class="float-right">▼</span></button>
+            <div class="accordion-content p-3 border-t border-gray-200 text-gray-600">
+                ${detailsHtml}
+            </div>
+        `;
+        cableFaultsTableContainer.appendChild(itemDiv);
+    });
+    
+    const cableEquipmentData = [
+        { category: "Cable Jointing and Termination Technologies", items: [
+            { name: "Cold Shrink Accessories", principle: "Pre-expanded elastomeric bodies shrink onto cable without heat.", use: "Jointing/Termination", voltage: "11kV-33kV", advantages: "No heat needed, safer, simpler, consistent, good seal.", limitations: "May be bulkier than heat shrink." },
+            { name: "Heat Shrink Accessories", principle: "Thermo-shrinkable polymeric parts shrink with heat application.", use: "Jointing/Termination", voltage: "11kV-33kV", advantages: "Robust mechanical protection, good sealing, long field history.", limitations: "Requires heat source, skill dependent." },
+            { name: "Separable Connectors (Plug-in Type)", principle: "Factory-molded, tested EPDM connectors for shielded, dead-front connections.", use: "Cable to equipment (switchgear, transformers)", voltage: "Up to 36kV", advantages: "Quick disconnect/connect, safe (dead-front), pre-tested reliability.", limitations: "Specific to bushing types (EN 50180/181)." }
+        ]},
+        { category: "Cable Fault Pre-location Methods", items: [
+            { name: "Time Domain Reflectometer (TDR)", principle: "Low-voltage pulses; reflections from impedance changes timed.", use: "Pre-location (opens, low-R shorts)", voltage: "LV, 11kV, 33kV", advantages: "Fast, non-destructive.", limitations: "Difficulty with high-R faults." },
+            { name: "Arc Reflection Method (ARM)", principle: "TDR + surge generator; arc temporarily lowers high fault resistance for TDR.", use: "Pre-location (high-R faults)", voltage: "11kV, 33kV", advantages: "Effective for high-R faults, fewer thumps.", limitations: "Requires thumper & filter." },
+            { name: "Impulse Current Method (ICM)", principle: "Surge generator creates fault flashover; transient current waves timed.", use: "Pre-location", voltage: "11kV, 33kV", advantages: "Useful for complex faults, long cables.", limitations: "Requires surge generator." }
+        ]},
+        { category: "Cable Fault Pinpointing Methods", items: [
+            { name: "Surge Generator (Thumper)", principle: "High-voltage capacitor discharge into cable; audible/magnetic signal at fault.", use: "Pinpointing; Fault Conditioning", voltage: "11kV, 33kV", advantages: "Direct indication (with detectors); can reduce fault resistance.", limitations: "Can stress cable if overused." },
+            { name: "Acoustic & Magnetic Detectors", principle: "Detects sound and electromagnetic pulse from thumper at fault.", use: "Pinpointing (with thumper)", voltage: "N/A", advantages: "Accurate, esp. with time-difference.", limitations: "Ambient noise interference." }
+        ]},
+        { category: "Cable Condition Assessment / Diagnostic Testing", items: [
+            { name: "Very Low Frequency (VLF) Hipot Tester", principle: "Applies AC voltage at 0.1 Hz or lower.", use: "Withstand Testing; Voltage Source for Diagnostics", voltage: "11kV, 33kV+", advantages: "Tests AC cables with portable equip.; less damaging than DC for XLPE.", limitations: "Longer test times than DC." },
+            { name: "Tan Delta (TD) Tester", principle: "Measures dielectric losses (tan δ) in insulation.", use: "Diagnostic (overall insulation condition)", voltage: "11kV, 33kV", advantages: "Non-destructive; indicates widespread degradation.", limitations: "Doesn't locate specific defects." },
+            { name: "Partial Discharge (PD) Detector", principle: "Detects and locates PD activity.", use: "Diagnostic (localized defects)", voltage: "11kV, 33kV", advantages: "Identifies incipient faults; off-line/on-line.", limitations: "Needs expertise; noise sensitive." }
+        ]},
+        { category: "Testing and Commissioning Apparatus", items: [
+            { name: "Insulation Resistance Testers (Megohmmeters)", principle: "Measures DC insulation resistance.", use: "Basic insulation integrity check", voltage: "DC", advantages: "Simple, fundamental test.", limitations: "Only DC properties." },
+            { name: "Continuity Testers", principle: "Verifies electrical continuity of conductors/screens.", use: "Checking for breaks/connections", voltage: "Low", advantages: "Simple, essential.", limitations: "Basic check." },
+            { name: "Phasing Testers", principle: "Ensures correct phase identification and sequence.", use: "Post-jointing/connection", voltage: "11kV, 33kV", advantages: "Prevents incorrect energization.", limitations: "Safety critical procedure." },
+            { name: "Earth Resistance Testers", principle: "Measures resistance of earthing systems.", use: "Verifying earthing compliance (ER-08)", voltage: "Low", advantages: "Ensures safety and fault path effectiveness.", limitations: "Specialized test." }
+        ]}
+    ];
+
+    const cableEquipmentTableContainer = document.getElementById('cableEquipmentTable');
+    cableEquipmentData.forEach(group => {
+        const groupDiv = document.createElement('div');
+        groupDiv.className = 'accordion-item border border-gray-200 rounded mb-3';
+        let itemsHtml = '<div class="space-y-3">';
+        group.items.forEach(item => {
+            itemsHtml += `
+                <div class="p-3 bg-gray-50 rounded shadow-sm">
+                    <h4 class="font-semibold text-gray-800">${item.name}</h4>
+                    <p class="text-sm text-gray-600"><strong>Principle:</strong> ${item.principle}</p>
+                    <p class="text-sm text-gray-600"><strong>Use:</strong> ${item.use} | <strong>Voltage:</strong> ${item.voltage}</p>
+                    <p class="text-sm text-gray-500"><strong>Advantages:</strong> ${item.advantages}</p>
+                    <p class="text-sm text-gray-500"><strong>Limitations:</strong> ${item.limitations}</p>
+                </div>
+            `;
+        });
+        itemsHtml += '</div>';
+        groupDiv.innerHTML = `
+            <button class="accordion-header w-full text-left p-4 bg-stone-50 hover:bg-stone-100 rounded-t font-medium text-sky-800 text-lg">${group.category} <span class="float-right">▼</span></button>
+            <div class="accordion-content p-4 border-t border-gray-200">
+                ${itemsHtml}
+            </div>
+        `;
+        cableEquipmentTableContainer.appendChild(groupDiv);
+    });
+
+    initializeAccordions(); // Call after dynamic content is added
+
+    // Chart for 11kV vs 33kV comparison
+    const kvCtx = document.getElementById('kvComparisonChart').getContext('2d');
+    new Chart(kvCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Insulation Thickness (mm)', 'Short Circuit Withstand (kA for 0.5s)'],
+            datasets: [
+                {
+                    label: '11kV Cables',
+                    data: [3.4, 25],
+                    backgroundColor: 'rgba(56, 189, 248, 0.6)', // sky-400
+                    borderColor: 'rgba(14, 165, 233, 1)', // sky-500
+                    borderWidth: 1
+                },
+                {
+                    label: '33kV Cables',
+                    data: [8.0, 31.5],
+                    backgroundColor: 'rgba(20, 184, 166, 0.6)', // teal-500
+                    borderColor: 'rgba(13, 148, 136, 1)', // teal-600
+                    borderWidth: 1
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { beginAtZero: true, ticks: { color: '#4b5563'}, grid: { color: '#e5e7eb'} } ,
+                x: { ticks: { color: '#4b5563', font: {size: 10} }, grid: { display: false } }
+            },
+            plugins: {
+                legend: { labels: { color: '#374151'} },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) { label += ': '; }
+                            if (context.parsed.y !== null) { label += context.parsed.y; }
+                            return label;
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Chart for Fault Distribution
+    const faultCtx = document.getElementById('faultDistributionChart').getContext('2d');
+    new Chart(faultCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Single Line-to-Ground (L-G)', 'Line-to-Line (L-L)', 'Three-Phase (L-L-L)', 'Open Circuit & Other'],
+            datasets: [{
+                label: 'Fault Type Distribution',
+                data: [70, 15, 10, 5], // Example data based on L-G 60-80%
+                backgroundColor: [
+                    'rgba(239, 68, 68, 0.7)', // red-500
+                    'rgba(249, 115, 22, 0.7)', // orange-500
+                    'rgba(234, 179, 8, 0.7)', // yellow-500
+                    'rgba(163, 230, 53, 0.7)' // lime-400
+                ],
+                borderColor: [
+                    'rgba(220, 38, 38, 1)',
+                    'rgba(245, 158, 11, 1)',
+                    'rgba(202, 138, 4, 1)',
+                    'rgba(132, 204, 22, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom', labels: { color: '#374151', font: {size: 10}} },
+                title: { display: true, text: 'Approximate Fault Distribution in MV Networks', color: '#1f2937', font: {size: 14}},
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.label || '';
+                            if (label) { label += ': '; }
+                            if (context.parsed !== null) { label += context.parsed + '%'; }
+                            return label;
+                        }
+                    }
+                }
+            }
+        }
+    });
+</script>
+</body>
+</html>
